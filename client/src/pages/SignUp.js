@@ -1,5 +1,5 @@
-import React, {useState} from 'react';
-import {useHistory} from 'react-router-dom'
+import React, {useState, useEffect} from 'react';
+import {useHistory} from 'react-router-dom';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -14,7 +14,7 @@ import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 import validator from 'validator';
-import validEmailRegex from 'constants';
+import {validEmailRegex} from '../constants';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -43,37 +43,48 @@ const useStyles = makeStyles((theme) => ({
 export default function SignUp() {
   const classes = useStyles();
   const history = useHistory();
+  
   const [state , setState] = useState({
     email : "",
     password : "",
     firstname : "",
-    lastname : ""
+    lastname : "",
+    errors: {
+      firstname: "",
+      lastname: "",
+      email: "",
+      password: "",
+    }
   })
+  
   const redirectToLogin = () => {
     history.push('/login'); 
   }
+  
   const handleChange = (e) => {
-      const {id , value} = e.target;
+      var {id , value} = e.target;
       const errors = state.errors;
-      
       switch (id) {
         case 'firstname': 
-          errors.fullName = 
+          value=value.trim(); 
+          errors.firstname = 
             value.length < 1
               ? 'First Name must be 1 character long!'
               : '';
           break;
-        case 'lastname': 
-          errors.fullName = 
+        case 'lastname':
+          value=value.trim(); 
+          errors.lastname = 
             value.length < 1
               ? 'Last Name must be 1 character1 long!'
               : '';
           break;
         case 'email': 
+          value=value.trim(); 
           errors.email = 
             validEmailRegex.test(value)
               ? ''
-              : 'Email is not valid!';
+              : 'Invalid Email Address!';
           break;
         case 'password': 
           errors.password = 
@@ -85,37 +96,60 @@ export default function SignUp() {
           break;
       }
       setState(prevState => ({
-            ...prevState,
-            [id] : value,
-            errors
-        }));
+        ...prevState,[id]: value, errors}));
+      
+
   }
-  function checkStatus(res) {
-    if (res.ok) { // res.status >= 200 && res.status < 300
-        redirectToLogin();
-        return res;
+  const validateForm = (errors) => {
+    let valid = true;
+    Object.values(state).forEach(
+      // if we have an error string set valid to false
+      (val, id) => val==="" && (valid = false)
+    );
+    Object.values(errors).forEach(
+      // if we have an error string set valid to false
+      (val) => val.length > 0 && (valid = false)
+    );
+    return valid;
+  }
+
+  function checkStatus(jsonData) {
+    
+    if (status>=200 && status<300) { // res.status >= 200 && res.status < 300
+      redirectToLogin();
     } else {
-        throw res.statusText;
+      throw jsonData; 
     }
   }
+
+  let status;
   const handleSubmit = async(e) => {
     e.preventDefault();
-    fetch('/api/signup', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(state),
-    }).then(checkStatus)
-    .catch(error=>{
-      console.log(error);
-    });
+    if(validateForm(state.errors)) {
+
+      fetch('/api/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(state),
+      })
+      .then((res) => { 
+        status = res.status;
+        return res.json();
+      })
+      .then(checkStatus)
+      .catch(error=>{
+        console.log(error);
+      });
+    }
+    
 
   };
-
+  
   return (
+    
     <Container component="main" maxWidth="xs">
-      <CssBaseline />
       <div className={classes.paper}>
         <Avatar className={classes.avatar}>
           <LockOutlinedIcon />
@@ -132,10 +166,12 @@ export default function SignUp() {
                 variant="outlined"
                 required
                 fullWidth
+                color= "secondary"
                 id="firstname"
                 label="First Name"
                 autoFocus
                 value={state.firstname}
+                error={!!state.errors.firstname}
                 onChange={handleChange}
               />
             </Grid>
@@ -144,11 +180,13 @@ export default function SignUp() {
                 variant="outlined"
                 required
                 fullWidth
+                color= "secondary"
                 id="lastname"
                 label="Last Name"
                 name="lastname"
                 autoComplete="lname"
                 value={state.lastname}
+                error={!!state.errors.lastname}
                 onChange={handleChange}
               />
             </Grid>
@@ -157,12 +195,15 @@ export default function SignUp() {
                 variant="outlined"
                 required
                 fullWidth
+                color= "secondary"
                 id="email"
                 label="Email Address"
                 name="email"
                 autoComplete="email"
                 value={state.email}
                 onChange={handleChange}
+                error={!!state.errors.email}
+                helperText={state.errors.email}
               />
             </Grid>
             <Grid item xs={12}>
@@ -170,6 +211,7 @@ export default function SignUp() {
                 variant="outlined"
                 required
                 fullWidth
+                color= "secondary"
                 name="password"
                 label="Password"
                 type="password"
@@ -177,6 +219,8 @@ export default function SignUp() {
                 autoComplete="current-password"
                 value={state.password}
                 onChange={handleChange}
+                error={!!state.errors.password}
+                helperText={state.errors.password !='' ? 'Password needs to be at least 4 characters!' : ''}
               />
             </Grid>
             
@@ -184,15 +228,15 @@ export default function SignUp() {
           <Button
             type="submit"
             fullWidth
-            variant="contained"
-            color="primary"
+            variant="outlined"
+            color="inherit"
             className={classes.submit}
           >
             Sign Up
           </Button>
           <Grid container justify="flex-end">
             <Grid item>
-              <Link href="/login" variant="body2">
+              <Link href="/login" variant="body2" color="inherit">
                 Already have an account? Sign in
               </Link>
             </Grid>

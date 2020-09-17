@@ -1,0 +1,11 @@
+html {
+    min-height: 100%;
+}
+body {
+    min-height: 100%;
+    margin: 0;
+    background: linear-gradient(150deg, #38314b, #181422);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+

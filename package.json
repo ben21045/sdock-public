@@ -18,13 +18,20 @@
   },
   "dependencies": {
     "@material-ui/lab": "^4.0.0-alpha.56",
+    "alphavantage": "^2.1.0",
     "bcrypt": "^5.0.0",
+    "body-parser": "^1.19.0",
     "connect-pg-simple": "^6.1.0",
+    "cookie-parser": "^1.4.5",
+    "email-templates": "^7.1.0",
     "express": "^4.17.1",
     "express-session": "^1.17.1",
     "express-validator": "^6.6.1",
+    "http-errors": "^1.8.0",
     "passport": "^0.4.1",
     "passport-local": "^1.0.0",
-    "pg": "^8.3.0"
+    "pg": "^8.3.0",
+    "pug": "^3.0.0",
+    "uuid": "^8.3.0"
   }
 }

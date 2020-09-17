@@ -2,7 +2,7 @@ const Pool = require('pg').Pool;
 const bcrypt = require('bcrypt');
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
-const {v4:uuidv4} = require('uuid/v4');
+const {v4:uuidv4} = require('uuid');
 
 
 const pool = new Pool()

@@ -12,6 +12,7 @@ require('./backend/config/routes')(app, passport, db)
 
 
 const server = app.listen(port, () => {
+	db.query('TRUNCATE session');
 	console.log(`Listening on port ${port}`)
 }
 );

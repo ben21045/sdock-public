@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useState, useEffect } from 'react';
 import {
   CssBaseline,
   withStyles,
@@ -6,29 +6,33 @@ import {
   Typography,
   Box,
 } from '@material-ui/core';
-
+import { makeStyles } from '@material-ui/core/styles';
+import cookie from 'react-cookie';
 import {
   Alert,
   AlertTitle
 } from '@material-ui/lab';
-
 import { createMuiTheme } from '@material-ui/core/styles';
 import deepOrange from '@material-ui/core/colors/deepOrange';
-import amber from '@material-ui/core/colors/amber';
+import purple from '@material-ui/core/colors/purple';
 import {
   BrowserRouter as Router,
   Switch,
   Route,
   Link,
-  useLocation
+  useLocation,
+  Redirect
 } from "react-router-dom";
 
 
-import AppHeader from './components/AppHeader';
-import Home from './pages/Home';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
+import "./App.css";
+import AppLayout from "./pages/dashboard";
+import { useCookies } from 'react-cookie';
 
+import PerfectScrollbar from 'react-perfect-scrollbar';
+import { deepPurple } from '@material-ui/core/colors';
 
 function NoMatch() {
   let location = useLocation();
@@ -50,44 +54,96 @@ const styles = theme => ({
   },
 });
 */
-function Copyright() {
-  return (
-    <Typography variant="body2" color="textSecondary" align="center">
-      {'Copyright © '}
-      <Link color="inherit" href="https://material-ui.com/">
-        SDock
-      </Link>{' '}
-      {new Date().getFullYear()}
-      {'.'}
-    </Typography>
-  );
-}
+
 
 const theme = createMuiTheme({
   palette: {
-    type: "dark",
-    primary:  deepOrange,
-    secondary: amber
-  } 
+    primary: { main:'#38314b'}
+    ,
+    secondary: deepOrange,
+    type: "dark"
+  }
 });
 
-const App = ({ classes }) => (
-  <ThemeProvider theme={theme}>
-  <Router>
+const useStyles = makeStyles((theme) => ({
+  root: {
+    //display: 'flex',
+  }
+})
+);
+
+
+export default function App (){
+  const classes = useStyles();
+  const [cookies, setCookie] = useCookies(['isLoggedIn']);
+
+  function handleLoginSuccess() {
+    setCookie('isLoggedIn', true);
+  }
+  const PrivateRoute = ({ component: Component, ...rest }) => {
     
+    return (
+      
+      <Route
+        {...rest}
+        render={routerProps =>{
+          
+          return cookies.isLoggedIn ? (
+            <Component {...routerProps} />
+          ) : (
+            <Redirect
+              to={{ pathname: "/login", state: { from: routerProps.location } }}
+            />
+          )
+        }
+        }
+      />
+    );
+  };
+/*   useEffect(() => {
+    fetch('/api/user',{
+      method: 'get'
+    }).then(function (response) {
+      if(response.ok){
+        setState({
+        loggedIn: true,
+        user: response.body.user
+        });
+      }else {
+        setState({
+        loggedIn: false,
+        user: null
+        });
+      }
+    });
+    
+  }, [state.user]) */
+
+
+
+
+  return (
+  
+    
+  <Router>
+      
       <Fragment>
+      <ThemeProvider theme={theme}>
         <CssBaseline />
-        
-        
-        
-        {/*<main className={classes.main}>*/}
-        <Switch>
+          
+          <Switch>
               <Route exact path="/">
-                <AppHeader />
-                  <Home />
+                  <Redirect to="/dashboard" />
               </Route>
+              
+              <PrivateRoute path={["/dashboard","/search"]} component={AppLayout} isLoggedIn={cookies.isLoggedIn}/>
               <Route path="/login">
-                <Login />
+                {!cookies.isLoggedIn && (
+                  <Alert severity="warning">
+                    You are not logged in. Please sign in!
+                  </Alert>
+                )}
+                <Login onSuccess={handleLoginSuccess}/>
               </Route>
               <Route path="/signup">
                 <SignUp />
@@ -95,16 +151,13 @@ const App = ({ classes }) => (
               <Route path="*">
                 <NoMatch />
               </Route>
-        </Switch>
-        
-        <Box mt={5}>
-          <Copyright />
-        </Box>
-        {/*</main>*/}
-      </Fragment> 
+          </Switch>
+      </ThemeProvider>
+    </Fragment> 
+      
   </Router>
-  </ThemeProvider>
-);
+  
+  );
+}
 
 //export default withStyles(styles)(App);
-export default App;

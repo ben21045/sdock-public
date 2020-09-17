@@ -14,7 +14,12 @@ import Grid from '@material-ui/core/Grid';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
-
+import { useCookies } from 'react-cookie';
+import Fade from '@material-ui/core/Fade';
+import Copyright from '../components/Copyright'
+import {
+  Alert
+} from '@material-ui/lab';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -37,79 +42,99 @@ const useStyles = makeStyles((theme) => ({
   },
   submit: {
     margin: theme.spacing(3, 0, 2),
+
   },
+
 }));
 
 export default function Login(props) {
   const classes = useStyles();
   const history = useHistory();
+  const [cookies, setCookie] = useCookies('userId');
+
   const [state , setState] = useState({
     email : "",
-    password : ""
+    password : "",
+    errorMessage : "",
+    successMessage : ""
   })
   const handleChange = (e) => {
       const {id , value} = e.target ;  
       setState(prevState => ({
           ...prevState,
-          [id] : value
+          [id] : value,
+          "errorMessage" : ""
       }
       ))
       
   }
+  
   const handleSubmitClick = (e) => {
     e.preventDefault();
     const payload={
         "email":state.email,
         "password":state.password,
     }
+    let status;
     fetch('/api/login',{
       method: 'post',
       body:    JSON.stringify(payload),
       headers: { 'Content-Type': 'application/json' },
-  })
-        .then(function (response) {
-            if(response.data.code === 200){
-                setState(prevState => ({
-                    ...prevState,
-                    'successMessage' : 'Login successful. Redirecting to home page..'
-                }))
-                redirectToHome();
-                props.showError(null)
-            }
-            else if(response.data.code === 204){
-                props.showError("Username and password do not match");
-            }
-            else{
-                props.showError("Username does not exists");
+    })
+        .then(response => {
+          status=response.status;
+          return response.json();
+        })
+        .then(function (data) {
+            if(status===200){
+              setState(prevState => ({
+                  ...prevState,
+                  'successMessage' : 'Login successful. Redirecting to home page..'
+              }));
+              props.onSuccess()
+              redirectToDashboard();
+              
+            }else{
+              setState(prevState => ({
+                ...prevState,
+                'errorMessage' : 'Invalid email or password'
+              }));
+              throw data
             }
         })
         .catch(function (error) {
             console.log(error);
         });
-}
+  };
 
-const redirectToHome = () => {
-  history.push('/home');
-}
-const redirectToSignUp = () => {
-  history.push('/signup'); 
-}
+  const redirectToDashboard = () => {
+    console.log("redirecting")
+    history.push('/dashboard');
+
+  }
   return (
+    <div>
     <Container component="main" maxWidth="xs">
       <CssBaseline />
         <div className={classes.paper}>
           <Avatar className={classes.avatar}>
-            <LockOutlinedIcon />
+            <LockOutlinedIcon style={{ color: '#FFFFFF' }} />
           </Avatar>
           <Typography component="h1" variant="h5">
             Sign in
           </Typography>
-          <form className={classes.form} noValidate>
+          <form className={classes.form} noValidate >
+            <Fade in={!!state.errorMessage}>
+                <Alert severity="warning">
+                  {state.errorMessage}
+                </Alert>
+            </Fade>
             <TextField
               variant="outlined"
               margin="normal"
               required
               fullWidth
+              color="secondary"
               id="email"
               label="Email Address"
               name="email"
@@ -123,6 +148,7 @@ const redirectToSignUp = () => {
               margin="normal"
               required
               fullWidth
+              color="secondary"
               name="password"
               label="Password"
               type="password"
@@ -138,21 +164,21 @@ const redirectToSignUp = () => {
             <Button
               type="submit"
               fullWidth
-              variant="contained"
-              color="primary"
+              variant="outlined"
+              color="inherit"
               className={classes.submit}
-              onclick={handleSubmitClick}
+              onClick={handleSubmitClick}
             >
               Sign In
             </Button>
             <Grid container>
               <Grid item xs>
-                <Link href="#" variant="body2">
+                <Link href="#" variant="body2" color="inherit">
                   Forgot password?
                 </Link>
               </Grid>
               <Grid item>
-                <Link href="/signup" variant="body2">
+                <Link href="/signup" variant="body2" color="inherit">
                   {"Don't have an account? Sign Up"}
                 </Link>
               </Grid>
@@ -160,6 +186,9 @@ const redirectToSignUp = () => {
             
           </form>
         </div>
+        
     </Container>
+    <Copyright />
+    </div>
   );
 }
