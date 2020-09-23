@@ -29,13 +29,13 @@ const useStyles = makeStyles((theme)=>({
   }));
 
 
-export default function Deposits(props) {
+export default (props)=> {
     const classes = useStyles();
     let price=parseFloat(props.purchaseInfo.price,10).toFixed(2);
     let symbol=props.purchaseInfo.symbol;
     let timestamp=props.purchaseInfo.timestamp;
     let date= new Date(timestamp);
-    const [quantity , setQuantity] = React.useState(0);
+    //const [quantity , setQuantity] = React.useState(0);
     const [openDialog, setOpenDialog] = React.useState(false);
     const [successMessage, setSuccessMessage] = React.useState('');
     const [cookie,setCookie] = useCookies('isLoggedIn');
@@ -50,19 +50,20 @@ export default function Deposits(props) {
     const handleCloseAlert= ()=>{
         setSuccessMessage('');
     }
+   /*
     const handleChange = (e) => {
         let targetValue = e.target.value;
         targetValue=targetValue.replace('-', ''); 
         setQuantity(targetValue);
         
     }
-
+    */
 
     let status;
     function checkStatus(jsonData) {
     
         if (status>=200 && status<300) { // res.status >= 200 && res.status < 300
-          setSuccessMessage("Successfully added "+quantity+" shares of "+symbol+"!");
+          setSuccessMessage("Successfully added " + symbol +" to porfolio!");
           setOpenDialog(false);
         } else {
             if(status==401){
@@ -76,8 +77,7 @@ export default function Deposits(props) {
     
     const handleSubmit = async(e) => {
         e.preventDefault();
-        console.log(`/api/user/symbol/${symbol}/quantity/${quantity}`);
-        fetch(`/api/user/symbol/${symbol}/quantity/${quantity}`, {
+        fetch(`/api/user/add/symbol/${symbol}`, {
             method: 'POST'
         })
         .then((res) => { 
@@ -101,7 +101,7 @@ export default function Deposits(props) {
                 <form noValidate onSubmit={handleSubmit}>
                     <Box display="flex" alignContent="center" flexDirection="row" mb={2}>
                     
-                        <TextField
+                        {/*<TextField
                         autoFocus
                             color="secondary"
                             margin="dense"
@@ -113,12 +113,12 @@ export default function Deposits(props) {
                         style = {{width: '70'}}
                         value = {quantity}
                         onChange = {handleChange}
-                        />
+                        />*/}
                         <div style={{
     display: 'flex',
     alignItems: 'center'
 }}>
-                            <Button type="submit" disabled={!quantity||quantity==0}  variant="contained" color="primary" >confirm</Button>
+                            <Button type="submit" variant="contained" color="primary" >confirm</Button>
                         </div>
                     
                     </Box>

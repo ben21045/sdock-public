@@ -4,7 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const Email = require('email-templates');
 const createError = require('http-errors');
 const fetch = require('node-fetch');
-
+const eachOfSeries = require("async/eachOfSeries");
 
 const sendConfirmation =(email, firstname)=>{
     const emailObj = new Email({
@@ -58,12 +58,13 @@ const getBatchQuote = (stockList)=>{
     .then(response => response.json())
     .then(data => {
         let i=0;
+        stockInfo={};
         for (const key in data){
-            stockList[i].price=data[key].quote.latestPrice;
-            stockList[i].timestamp=data[key].quote.latestTime;
+            currentStock=stockList[i];
+            stockInfo[currentStock.symbol]={quantity: currentStock.quantity,price: data[key].quote.latestPrice,timestamp: data[key].quote.latestTime}
             i++
         }
-        return stockList;
+        return stockInfo;
     })
     .catch((error)=>{
         console.log(error)  
@@ -72,25 +73,29 @@ const getBatchQuote = (stockList)=>{
 }
 
 //historical data
+/*
 const getBatchHistorical = (stockList)=>{
     let symbols=stockList.map(stock=>stock.symbol);
     symbols = symbols.join(',');
+    
     return query(symbols,quote,'5m')
     .then(response => response.json())
     .then(data => {
         let i=0;
+        stockInfo={};
         for (const key in data){
-            stockList[i].price=data[key].quote.latestPrice;
-            stockList[i].timestamp=data[key].quote.latestTime;
+            currentStock=stockList[i];
+            stockInfo[currentStock.symbol]={price: data[key].quote.latestPrice,timestamp: data[key].quote.latestTime}
             i++
         }
-        return stockList;
+        return stockInfo;
     })
     .catch((error)=>{
         console.log(error)  
         next(createError(500,error));
       });
 }
+*/
 module.exports = (db,validationResult, passport) =>{
     function login(req, res, next) {
         
@@ -191,18 +196,54 @@ module.exports = (db,validationResult, passport) =>{
             }
         })
     }
-    function setPortfolio(req,res,next){
-        const quantity=req.params.quantity;
+    
+    function updatePortfolio(req,res,next){
+        stocks=req.body;
+        
+        eachOfSeries(stocks,
+        (stockInfo,symbol,cb)=>{
+            const quantity=stockInfo.quantity;
+            const email=req.user.email;
+            if(quantity>=0){
+                db.query('UPDATE portfolio SET quantity=($3) WHERE (email=($1) AND symbol=($2))',[email,symbol,quantity] ,(err)=>{
+                    if (err){
+                        
+                        return cb(err);
+                    }
+                    cb()
+                })
+            }else{
+                db.query('DELETE FROM portfolio WHERE (email=($1) AND symbol=($2))',[email,symbol] ,(err)=>{
+                    if (err){
+                        
+                        return cb(err);
+                    }
+                    cb()
+                })
+            }
+        },
+        (err)=>{
+            if(err){
+                console.log("error has occured");
+                return next(err);
+            }else{
+                return res.sendStatus(200);
+            }
+        });
+        
+    }
+
+    function addPortfolioItem(req,res,next){
         const symbol=req.params.symbol;
         const email=req.user.email;
 
         
         db.query(
             'INSERT INTO portfolio (email, symbol,quantity) \
-             VALUES ($1,UPPER($2),$3) \
+             VALUES ($1,UPPER($2),0) \
              ON CONFLICT (email,symbol) \
              DO \
-                UPDATE SET quantity=($3)',[email,symbol,quantity], (err, result) => {
+                NOTHING',[email,symbol], (err, result) => {
             if (err){
                 console.log("error has occured");
                 return next(err);
@@ -212,8 +253,7 @@ module.exports = (db,validationResult, passport) =>{
             }
         })
     }
-
     
 
-    return {login:login,logout:logout, signup:signup, isLoggedIn:isLoggedIn ,user:user, getPortfolio:getPortfolio, setPortfolio:setPortfolio};
+    return {login:login,logout:logout, signup:signup, isLoggedIn:isLoggedIn ,user:user, getPortfolio:getPortfolio, updatePortfolio:updatePortfolio, addPortfolioItem:addPortfolioItem};
 }

@@ -9,6 +9,7 @@ import Portfolio from './components/Portfolio';
 import { useCookies } from 'react-cookie';
 import {useHistory} from 'react-router-dom';
 import PortfolioChart from './components/PortfolioChart'
+import CorrelationChart from './components/CorrelationChart'
 //import Chart from './Chart';
 //import Deposits from './Deposits';
 //import Orders from './Orders';
@@ -30,18 +31,23 @@ const useStyles = makeStyles((theme) => ({
   
 }));
 
+
+
 export default function Dashboard() {
   const classes = useStyles();
   const [open, setOpen] = React.useState(true);
-  const [stockList, setStockList] = React.useState([]);
+  const [portfolioItems, setPortfolioItems] = React.useState({});
+  const [correlationData, setCorrelationData] = React.useState({tickers:[],corr_matrix:[]});
   const [cookie,setCookie] = useCookies('isLoggedIn');
   const history = useHistory();
   const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
   let status;
-  useEffect(() => {
-    fetch('/api/user/portfolio',{
-      credentials: 'include',
-      method: 'GET',
+  function getPortfolioCorrelation(portfolio){
+    let status;
+    fetch('/api/python/portfolio/correlation',{
+      method: 'POST',
+      body:    JSON.stringify(portfolio),
+      headers: { 'Content-Type': 'application/json' }
     })
         .then(response => {
           status=response.status;
@@ -49,8 +55,8 @@ export default function Dashboard() {
         })
         .then(function (data) {
             if(status===200){
-              console.log("Received Portfolio");
-              setStockList(data)
+              console.log("Generated Correlation");
+              setCorrelationData(data);
             }else{
               
               if(status==401){
@@ -64,28 +70,59 @@ export default function Dashboard() {
           console.log(error);
           
         });
-  },[]);
+  }
+  useEffect(() => {
+    fetch('/api/user/portfolio',{
+      credentials: 'include',
+      method: 'GET',
+    })
+        .then(response => {
+          status=response.status;
+          return response.json();
+        })
+        .then(function (data) {
+            if(status===200){
+              console.log("Received Portfolio");
+              getPortfolioCorrelation(data)
+              setPortfolioItems(data)
+              
+            }else{
+              
+              if(status==401){
+                setCookie('isLoggedIn',false);
+                history.push('/login')
+              }  
+              throw data
+            }
+        })
+        .catch(function (error) {
+          console.log(error);
+          
+        });
+  }
+  
+  ,[]);
   return (
         <Container maxWidth="lg" >
           <Grid container spacing={3}>
             {/* Chart */}
-            <Grid item xs={12} sm={10} md={6} lg={5.5}>
+            <Grid item xs={12} sm={10} md={6} lg={5}>
               <Paper className={fixedHeightPaper}>
-                <PortfolioChart data={stockList}/>
+                <PortfolioChart data={portfolioItems}/>
               </Paper>
             </Grid>
             {/* Recent Deposits */}
             <Grid item xs={12} sm={8} md={6} lg={4}>
               <Paper className={fixedHeightPaper}>
                 
-                <Portfolio stocks={stockList}/>
+                <Portfolio stocks={portfolioItems}/>
                 
               </Paper>
             </Grid>
             {/* Recent Orders */}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={10} md={8}>
               <Paper className={classes.paper}>
-                {/* <Orders /> */}
+                 <CorrelationChart data={correlationData}/>
               </Paper>
             </Grid>
           </Grid>

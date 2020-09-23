@@ -7,6 +7,10 @@ import Divider from '@material-ui/core/Divider';
 import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
 import Box from '@material-ui/core/Box';
+import Button from '@material-ui/core/Button';
+import Dialog from '@material-ui/core/Dialog';
+import DialogContent from '@material-ui/core/DialogContent';
+import EditPortfolioPanel from './EditPortfolioPanel';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -21,27 +25,29 @@ const useStyles = makeStyles((theme) => ({
     qtyColumn: {
       marginRight: 'auto',
     },
+    dialogPaper: { minWidth: "250px" },
   }));
 
 function getPortfolioValue(stocks){
-  return stocks.reduce((sum,stock)=>sum+parseFloat(stock.price,10)*parseFloat(stock.quantity,10),0);
+  return Object.keys(stocks).reduce((sum,symbol)=>sum+parseFloat(stocks[symbol].price,10)*parseFloat(stocks[symbol].quantity,10),0);
 }
+
 
 function StockListItems(props){ 
   const stocks = props.stocks;
 
-  return stocks.map((stock) =>
-  <Fragment>
+  return Object.keys(stocks).map((symbol) =>
+  <Fragment key={symbol}>
     <Box ml={1} mr={1}>
     <Grid container direction="row" alignContent='center'>
       <Grid item xs={4}>
-        <ListItemText primary={stock.symbol} />
+        <ListItemText primary={symbol} />
       </Grid>
       <Grid item xs={4}>
-        <ListItemText primary={"$"+stock.price.toFixed(2)} style={{textAlign:"center"}}/>
+        <ListItemText primary={"$"+stocks[symbol].price.toFixed(2)} style={{textAlign:"center"}}/>
       </Grid>
       <Grid item xs={4}>
-        <ListItemText primary={stock.quantity} style={{textAlign:"right"}}/>
+        <ListItemText primary={stocks[symbol].quantity} style={{textAlign:"right"}}/>
       </Grid>
     </Grid>
     </Box>
@@ -49,11 +55,31 @@ function StockListItems(props){
   </Fragment>
   );
 }
+
+
+
 export default function Portfolio(props) {
   const classes = useStyles();
-  let portfolioValue=(getPortfolioValue(props.stocks)).toFixed(2);
+  const [openDialog, setOpenDialog] = React.useState(false);
   
+  const handleCloseDialog= ()=>{
+    setOpenDialog(false)
+  
+  }
+  const handleOpenDialog= ()=>{
+    setOpenDialog(true)
+  }
+
+  
+  let portfolioValue=(getPortfolioValue(props.stocks)).toFixed(2);
+
+  
+
   return (
+    <Fragment>
+    <Dialog open={openDialog} onClose={handleCloseDialog}  classes={{ paper: classes.dialogPaper}} >
+      <EditPortfolioPanel stocks={props.stocks}/>
+    </Dialog>
     <List component="nav" className={classes.root} >
       <Typography  variant="h6">
         My Portfolio
@@ -74,6 +100,7 @@ export default function Portfolio(props) {
         </Grid>
         </Grid>
       </Box>
+      
       {/*<Grid container direction="row" alignContent='center' justify="space-between">
         <Grid item><ListItemText secondary="Symbol" /></Grid>
         <Grid item><ListItemText secondary="Price" /></Grid>
@@ -83,5 +110,7 @@ export default function Portfolio(props) {
       <Divider/>
       <StockListItems stocks={props.stocks}/>
     </List>
+    <Button variant="contained" color="primary" onClick={handleOpenDialog}>Edit Portfolio</Button>
+    </Fragment>
   );
 }

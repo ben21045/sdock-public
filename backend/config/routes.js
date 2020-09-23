@@ -7,7 +7,7 @@ const stocks = require('../stocks');
 module.exports= (app, passport, db)=>{
 
 	const users = require('../users')(db,validationResult, passport)
-	
+	const portfolio = require('../portfolio')(db)
 
 
 	//Routes
@@ -23,8 +23,10 @@ module.exports= (app, passport, db)=>{
 	});
 	//requires login
 	app.get('/api/user',users.isLoggedIn, users.user);
-	app.get('/api/user/portfolio',users.isLoggedIn,users.getPortfolio);
-	app.post('/api/user/symbol/:symbol/quantity/:quantity',users.isLoggedIn,users.setPortfolio)
+	app.get('/api/user/portfolio',users.isLoggedIn,portfolio.getPortfolio);
+	app.post('/api/user/portfolio',users.isLoggedIn,portfolio.updatePortfolio);
+	//app.post('/api/user/symbol/:symbol/quantity/:quantity',users.isLoggedIn,users.updatePortfolioItem)
+	app.post('/api/user/add/symbol/:symbol',users.isLoggedIn,portfolio.addPortfolioItem)
 	app.post('/api/search',users.isLoggedIn, stocks.search);
 	
 	
@@ -37,6 +39,7 @@ module.exports= (app, passport, db)=>{
 		console.log('Error status: ', err.status);
 		console.log('Message: ', err.message);
 		console.log('\n');
+	
 		return res.status(err.status||500).json({
 			status: err.status,
 			message: err.message,

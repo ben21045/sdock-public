@@ -29,8 +29,8 @@ export default (props)=> {
   function round(value, decimals) {
     return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
    }  
-  const valueArray=chartData.map(stock=>round(stock.price*stock.quantity,2));
-  const symbolArray=chartData.map(stock=>stock.symbol);
+  const valueArray=Object.keys(chartData).map((symbol)=>round(chartData[symbol].price * chartData[symbol].quantity,2));
+  const symbolArray=Object.keys(chartData)
   //CHART OPTIONS
   let chartVisProps = {
     
@@ -53,7 +53,7 @@ export default (props)=> {
 
   return (
     <Fragment>
-      <ReactApexChart options={chartVisProps.options} series={chartVisProps.series} labels={chartVisProps.labels}  align="center" type="donut" />
+      <ReactApexChart options={chartVisProps.options} series={chartVisProps.series}   align="center" type="donut" />
     </Fragment>
     );
 
