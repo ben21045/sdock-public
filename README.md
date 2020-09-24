@@ -1,6 +1,5 @@
 # Sdock
 The Premier Stock Portfolio Dashboard
-Created by Benjamin Chang
 ## Project Overview
 Quickly curate your own stock portfolios. Evaluate your designed portfolios with metrics on your own dashboard. The application uses the following technology stack:
 1. PostgreSQL - Database
