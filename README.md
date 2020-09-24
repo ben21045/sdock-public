@@ -7,7 +7,11 @@ Quickly curate your own stock portfolios. Evaluate your designed portfolios with
 3. ReactJS - Frontend
 4. NodeJS - JavaScript runtime
 
+![sign in](/screenshots/signin.JPG)
+![sign up](/screenshots/signup.JPG)
 ![dashboard screen 1](/screenshots/dashboard-1.JPG)
+![dashboard screen 2](/screenshots/dashboard-2.JPG)
+![stock lookup](/screenshots/stocklookup.JPG)
 
 ## Prerequisites
   - NodeJS
