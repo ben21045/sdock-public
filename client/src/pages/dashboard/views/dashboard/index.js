@@ -14,7 +14,6 @@ import CorrelationChart from './components/CorrelationChart'
 //import Deposits from './Deposits';
 //import Orders from './Orders';
 
-
 const drawerWidth = 240;
 
 const useStyles = makeStyles((theme) => ({
